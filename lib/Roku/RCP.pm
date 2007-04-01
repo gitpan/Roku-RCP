@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = "0.02";
+$VERSION = "0.03";
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -56,13 +56,25 @@ sub new
  return bless $self, $class;
 }
 
+sub unRaw
+{
+  my $self = shift;
+  my $raw = $RawResults;
+  $RawResults = 0;
+  return $raw;
+}
+
 sub ServerConnectByName
 {
     my ($self, $name) = @_;
-    my (@servers, $i);
+    my (@servers, $i, $raw);
     return undef unless $name;
     $self->ServerDisconnect();
+
+    $raw = $self->unRaw();
     @servers = $self->ListServers();
+    $RawResults = $raw;
+    
     foreach $i (0..$#servers) {
 	if ($servers[$i] =~ m/$name/i) {
 	    $self->myLog("Attempting to connect to $servers[$i]: $i");
@@ -77,8 +89,10 @@ sub ServerConnectByName
 sub PlayPlaylist
 {
     my ($self, $name) = @_;
+    my $raw = $self->unRaw();
     my @plists = $self->ListPlaylists();
     my $i;
+    $RawResults = $raw;
     foreach $i (0..$#plists) {
 	if ($plists[$i] =~ m/$name/i) {
 	    $self->myLog("Attempting to queue and play $plists[$i]: $i");
@@ -274,6 +288,8 @@ Construct a new object.
     $rcp = new Roku::RCP('192.168.0.102', Debug=>1, RawResults=>1, Port=>5555, Timeout=>50);
 
 If RawResults is set, you'll get back everything Roku sends back. If it's not set, you'll just get back the data without any metadata. You can probably use RawResults along with Port=>4444 to send non RCP commands over to the normal Roku telnet interface. The telnet interface listening on port 4444 is mostly operating system-type commands and aren't related to media playback. Using Roku::RCP to communicate with the regular telnet interface is a usage case that hasn't been tested, but it should work. The module uses AUTOLOAD to take whatever function you call and send that down the connection.
+
+Be careful with RawResults because the data and metadata will be intermixed so if you have code expecting just the results, you'll be in for an unpleasant surprise.
 
 =item C<$rcp-E<gt>ServerConnectByName($server_name)>
 
