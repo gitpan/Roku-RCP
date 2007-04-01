@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = "0.01";
+$VERSION = "0.02";
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -175,7 +175,7 @@ sub myLog
 {
     my $self = shift;
     return unless ($self->debug);
-    $self->debug_print(0, join("", @_) . "\n");
+    $self->debug_print(0, join("\n", @_) . "\n");
 }
 
 sub response
@@ -190,6 +190,7 @@ sub response
 
   while (1) {
       $line = $self->getline();
+      $line =~ s/[\r\n]//og;
 
       if (index($line, "TransactionInitiated") >= 0) {
 	  $async = 1;
@@ -224,7 +225,7 @@ sub response
 #      index($result[$#result], "TransactionComplete") >= 0) { 
       push @result, "OK" unless scalar @result;
       $self->myLog("For cmd $cmd: returning: ", @result);
-      return wantarray ? @result : join("", @result);
+      return wantarray ? @result : join("\n", @result);
   }
   $self->myLog("Returning undef because of result: $result[$#result]");
   return undef;
