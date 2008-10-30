@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = "0.03";
+$VERSION = "0.04";
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -20,8 +20,6 @@ our %MetaData = ('TransactionInitiated' => 1, #Start of results
 		 'ListResultEnd'        => 2, #End of results
 		 'TransactionComplete'  => 2,
 		 );
-our $RawResults;
-
 sub new
 {
  my $self = shift;
@@ -32,7 +30,6 @@ sub new
 
  $args{Host} = $host if $host;
  $args{Timeout} = 60 unless defined $args{Timeout};
- $RawResults = $args{RawResults};
 
  return undef unless $args{Host};
 
@@ -43,6 +40,7 @@ sub new
  
  return undef unless defined $self;
  $self->debug($args{Debug});
+ ${*$self}{'_RawResults'} = $args{RawResults};
 
  $self->autoflush(1);
 
@@ -59,8 +57,8 @@ sub new
 sub unRaw
 {
   my $self = shift;
-  my $raw = $RawResults;
-  $RawResults = 0;
+  my $raw = ${*$self}{'_RawResults'};
+  ${*$self}{'_RawResults'} = 0;
   return $raw;
 }
 
@@ -73,7 +71,7 @@ sub ServerConnectByName
 
     $raw = $self->unRaw();
     @servers = $self->ListServers();
-    $RawResults = $raw;
+    ${*$self}{'_RawResults'} = $raw;
     
     foreach $i (0..$#servers) {
 	if ($servers[$i] =~ m/$name/i) {
@@ -92,7 +90,7 @@ sub PlayPlaylist
     my $raw = $self->unRaw();
     my @plists = $self->ListPlaylists();
     my $i;
-    $RawResults = $raw;
+    ${*$self}{'_RawResults'} = $raw;
     foreach $i (0..$#plists) {
 	if ($plists[$i] =~ m/$name/i) {
 	    $self->myLog("Attempting to queue and play $plists[$i]: $i");
@@ -219,7 +217,7 @@ sub response
 
       $self->myLog("Disconnected"), return undef if (!$line && !defined(fileno($self)));
       $line =~ s/^[^:]+: //om;
-      push @result, $line if ($line && ($RawResults || !$self->isMeta($line)));
+      push @result, $line if ($line && (${*$self}{'_RawResults'} || !$self->isMeta($line)));
       #$self->debug_print(0, "From wire: $line\n") if ($self->debug);
       last if ((!defined $line && !$async && scalar @result) ||
                ($prompt && index($line, $prompt) >= 0) ||
