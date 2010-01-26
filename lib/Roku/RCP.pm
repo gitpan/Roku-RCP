@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = "0.04";
+$VERSION = '0.05';
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -24,7 +24,7 @@ sub new
 {
  my $self = shift;
  my $class = ref($self) || $self;
- my ($host, %args, $self);
+ my ($host, %args);
  $host = shift if (scalar(@_) % 2);
  %args = @_;
 
@@ -273,7 +273,7 @@ Roku::RCP - Object approach to controlling RCP enabled Roku products, such as th
 
 C<Roku::RCP> Gives you an object through which you can communicate with your Roku Control Protocol-enabled Roku product. For the most part, the commands are merely passed through onto the connection and the results are parsed and returned to you either in an array in list context, or a giant string in scalar context. Should the command fail, undef is returned.
 
-You'll want to familiarize yourself with the Roku Control Protocol (RCP) by visting the Roku Labs site http://www.rokulabs.com and reading the RCP spec. Although this module provides some convenience functions, you'll need to have an understanding of the basic commands if you'd like to do anything more fancy.
+You'll want to familiarize yourself with the Roku Control Protocol (RCP) by visting the Roku Labs site http://www.rokulabs.com and reading the RCP spec. Although this module provides some convenience functions, you'll need to have an understanding of the basic commands if you'd like to do anything more fancy. If you're not into reading, you can telnet to port 5555 on your Roku yourself and type "help".
 
 =head1 METHODS
 
@@ -283,11 +283,11 @@ You'll want to familiarize yourself with the Roku Control Protocol (RCP) by vist
 
 Construct a new object.
 
-    $rcp = new Roku::RCP('192.168.0.102', Debug=>1, RawResults=>1, Port=>5555, Timeout=>50);
+    $rcp = new Roku::RCP('192.168.0.102', Debug=>0, RawResults=>0, Port=>5555, Timeout=>50);
 
-If RawResults is set, you'll get back everything Roku sends back. If it's not set, you'll just get back the data without any metadata. You can probably use RawResults along with Port=>4444 to send non RCP commands over to the normal Roku telnet interface. The telnet interface listening on port 4444 is mostly operating system-type commands and aren't related to media playback. Using Roku::RCP to communicate with the regular telnet interface is a usage case that hasn't been tested, but it should work. The module uses AUTOLOAD to take whatever function you call and send that down the connection.
+If RawResults is set, you'll get back everything Roku sends back. If it's not set, you'll just get back the data without any metadata. Be careful with RawResults because the data and metadata will be intermixed so if you have code expecting just the results, you'll be in for an unpleasant surprise. Everything after the hostname is optional. The proper defaults will be chosen.
 
-Be careful with RawResults because the data and metadata will be intermixed so if you have code expecting just the results, you'll be in for an unpleasant surprise.
+See the System Commands section for how to use Roku::RCP to send system-type commands instead of media playback-type commands.
 
 =item C<$rcp-E<gt>ServerConnectByName($server_name)>
 
@@ -323,16 +323,32 @@ Any commands not specifically listed here are considered to be RCP commands and 
 
 =back
 
+=head1 System Commands
+
+Port 5555 deals with media playback and control thereof. If you'd like to use Roku::RCP to send system-type commands to the 4444 control port, you should use the command() call. For example, if you wanted to create a script that notifies you of some event:
+
+    my $msg = 'Hey, look over here';
+    my @slides = (5, -5, 10, -5, -5);
+
+    $rcp = new Roku::RCP('192.168.0.102', Port=>4444);
+    $rcp->command('attract') foreach (1..5);
+    $rcp->command('sketch');
+    $rcp->command('font 14');
+    $rcp->command('clear');
+    $rcp->command("text 0 0 \"$msg\"");
+    foreach $slide (@slides) {
+      sleep 2;
+      $rcp->command("slide $slide 20");
+    }
+    sleep(4);
+    $rcp->Quit();
+
 =head1 LEGALESE
 
 Copyright 2007 by Robert Powers,
 all rights reserved. This program is free
 software, you can redistribute it and/or
 modify it under the same terms as Perl itself.
-
-=head1 BUGS
-
-This module is not 100% tested, but I use it every day, so it'll get better over time.
 
 =head1 AUTHOR
 
