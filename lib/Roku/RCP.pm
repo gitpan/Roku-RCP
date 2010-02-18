@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -101,6 +101,12 @@ sub PlayPlaylist
     }
     $self->myLog("No matching playlist found for $name");
     return undef;
+}
+
+sub Standby
+{
+  my $self = shift;
+  $self->IrDispatchCommand('CK_POWER_OFF');
 }
 
 sub PlayArtist
@@ -312,6 +318,10 @@ A convenience function that takes a partial, case insensitive song name and trie
 =item C<$rcp-E<gt>InsertSong($song_name)>
 
 A convenience function that takes a partial, case insensitive song name and tries to insert all matching songs into the queue and play them. Note that if the song/s is/are already in your queue, the position won't change and the next song in your queue will start playing.
+
+=item C<$rcp-E<gt>Standby()>
+
+Put the Roku into standby as if you pressed the Power button on the remote control.
 
 =item C<$rcp-E<gt>Quit()>
 

@@ -1,6 +1,9 @@
 ######################################################################
 Revision history for Perl extension Roku::RCP
 
+0.06  2010/02/18
+    (RJP) Added Standby
+
 0.05  2009/01/26
     (RJP) Better System Port documentation
 
