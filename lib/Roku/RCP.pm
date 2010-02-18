@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -106,7 +106,7 @@ sub PlayPlaylist
 sub Standby
 {
   my $self = shift;
-  $self->IrDispatchCommand('CK_POWER_OFF');
+  return $self->IrDispatchCommand('CK_POWER_OFF');
 }
 
 sub PlayArtist
