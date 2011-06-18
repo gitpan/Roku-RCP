@@ -12,7 +12,7 @@ use Net::Cmd;
 use IO::Socket::INET;
 use vars qw(@ISA $VERSION);
 
-$VERSION = '0.07';
+$VERSION = '0.08';
 @ISA = qw(Net::Cmd IO::Socket::INET);
 
 our %MetaData = ('TransactionInitiated' => 1, #Start of results
@@ -148,8 +148,7 @@ sub InsertSong
 
     $self->myLog("Attempting to search for songs matching $name and insert them into Queue at position $position");
     $self->SearchSongs($name) or return undef;
-    $self->NowPlayingInsert("all", $position) or return undef;
-    return $self->Next();
+    return $self->NowPlayingInsert("all", $position);
 }
 
 sub AUTOLOAD
